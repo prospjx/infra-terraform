@@ -37,3 +37,21 @@ resource "aws_nat_gateway" "mynat" {
   connectivity_type = "private"
   subnet_id         = aws_subnet.my_subnet.id
 }
+
+resource "aws_route_table" "myroutetable" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  route {
+    cidr_block = var.cidr_block
+    gateway_id = aws_internet_gateway.my_ig.id
+  }
+
+  route {
+    ipv6_cidr_block = "::/0"
+    gateway_id      = aws_internet_gateway.my_ig.id
+  }
+
+  tags = {
+    Name = "example"
+  }
+}
