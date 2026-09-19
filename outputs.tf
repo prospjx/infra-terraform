@@ -13,6 +13,11 @@ output "s3_bucket_arn" {
   value       = module.s3.bucket_arn
 }
 
+output "cloudfront_distribution_domain_name" {
+  description = "The domain name of the CloudFront distribution"
+  value       = module.cloudfront.distribution_domain_name
+}
+
 output "dynamodb_table_arn" {
   description = "The ARN of the DynamoDB table"
   value       = module.dynamodb.table_arn
