@@ -33,7 +33,9 @@ resource "aws_eks_cluster" "myeks" {
   version  = "1.31"
 
   vpc_config {
-    subnet_ids = var.subnet_ids
+    subnet_ids              = var.subnet_ids
+    endpoint_private_access = true
+    endpoint_public_access  = true
   }
 
   # Ensure that IAM Role permissions are created before and deleted

@@ -1,5 +1,6 @@
 locals {
-  s3_origin_id = "s3-origin-${var.s3_bucket_id}"
+  s3_origin_id      = "s3-origin-${var.s3_bucket_id}"
+  backend_origin_id = "eks-backend-origin"
 }
 
 resource "aws_cloudfront_origin_access_control" "myaccesscontrol" {
@@ -20,6 +21,46 @@ resource "aws_cloudfront_distribution" "mydistribution" {
     domain_name              = var.s3_bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.myaccesscontrol.id
     origin_id                = local.s3_origin_id
+  }
+
+  dynamic "origin" {
+    for_each = var.backend_domain_name != "" ? [var.backend_domain_name] : []
+    content {
+      domain_name = origin.value
+      origin_id   = local.backend_origin_id
+
+      custom_origin_config {
+        http_port                = 8000
+        https_port               = 443
+        origin_protocol_policy   = "http-only"
+        origin_ssl_protocols     = ["TLSv1.2"]
+        origin_read_timeout      = 60
+        origin_keepalive_timeout = 5
+      }
+    }
+  }
+
+  dynamic "ordered_cache_behavior" {
+    for_each = var.backend_domain_name != "" ? [1] : []
+    content {
+      path_pattern     = "/api/*"
+      target_origin_id = local.backend_origin_id
+      allowed_methods  = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+      cached_methods   = ["GET", "HEAD"]
+      viewer_protocol_policy = "redirect-to-https"
+
+      forwarded_values {
+        query_string = true
+        headers      = ["*"]
+        cookies {
+          forward = "all"
+        }
+      }
+
+      min_ttl     = 0
+      default_ttl = 0
+      max_ttl     = 0
+    }
   }
 
   default_cache_behavior {
